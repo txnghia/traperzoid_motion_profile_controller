@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DC Motor Controller</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <h1>DC Motor Controller</h1>
+
+  <div class="card">
+    <h2>Open-Loop Motor Control</h2>
+    <input id="pwm-slider" type="range" min="-255" max="255" value="0">
+    <h3>PWM Command: <span id="pwm-value">0</span></h3>
+    <button id="send-button">Send PWM</button>
+    <button id="stop-button">STOP</button>
+  </div>
+
+  <div class="card">
+    <h2>Encoder Live Data</h2>
+    <p>Encoder Count: <span id="encoder-count">0</span></p>
+    <p>Direction: <span id="encoder-dir">0</span></p>
+    <p>Raw Speed: <span id="raw-speed">0</span> counts/sec</p>
+    <p>Filtered Speed: <span id="filtered-speed">0</span> counts/sec</p>
+    <p>Motor RPM: <span id="motor-rpm">0</span></p>
+    <p>Output RPM: <span id="output-rpm">0</span></p>
+    <p>Output Angle: <span id="output-angle-deg">0</span> deg</p>
+    <button id="reset-encoder-button">Reset Encoder</button>
+  </div>
+
+  <div class="row">
+    <div class="card half">
+      <h2>Closed-Loop Speed Control</h2>
+      <input id="target-rpm-slider" type="range" min="-60" max="60" value="0">
+      <h3>Target: <span id="target-rpm-value">0</span> RPM</h3>
+
+      <button id="pid-set-target-button">Set Target RPM</button>
+      <button id="pid-enable-button">Enable Speed PID</button>
+      <button id="pid-disable-button">Disable Speed PID</button>
+
+      <h3>Speed PID Gains</h3>
+      <p>Kp: <input id="kp-input" type="number" step="0.01" value="0.05"></p>
+      <p>Ki: <input id="ki-input" type="number" step="0.01" value="0.10"></p>
+      <p>Kd: <input id="kd-input" type="number" step="0.01" value="0.00"></p>
+
+      <button id="pid-set-gains-button">Set Speed Gains</button>
+
+      <p>Speed PID Enabled: <span id="pid-enabled">0</span></p>
+      <p>Speed PID PWM: <span id="pid-pwm">0</span></p>
+      <p>Target Output RPM: <span id="target-output-rpm">0</span></p>
+    </div>
+
+    <div class="card half">
+      <h2>Live Speed Trend</h2>
+      <canvas id="speed-trend-canvas" width="650" height="300"></canvas>
+      <p>
+        Target RPM: <span id="graph-target-rpm">0</span> |
+        Actual RPM: <span id="graph-output-rpm">0</span> |
+        PWM: <span id="graph-pid-pwm">0</span>
+      </p>
+      <p class="small-text">
+        Blue = target RPM, Green = actual RPM, Red = speed PWM / 5
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card half">
+      <h2>Direct Position PID</h2>
+
+      <input id="target-angle-slider" type="range" min="-360" max="360" value="0">
+      <h3>Target: <span id="target-angle-value">0</span> deg</h3>
+
+      <button id="position-set-target-button">Set Target Angle</button>
+      <button id="position-enable-button">Enable Position PID</button>
+      <button id="position-disable-button">Disable Position PID</button>
+
+      <h3>Position PID Gains</h3>
+      <p>Kp: <input id="pos-kp-input" type="number" step="0.01" value="0.20"></p>
+      <p>Ki: <input id="pos-ki-input" type="number" step="0.01" value="0.00"></p>
+      <p>Kd: <input id="pos-kd-input" type="number" step="0.01" value="0.01"></p>
+
+      <button id="position-set-gains-button">Set Position Gains</button>
+
+      <p>Position PID Enabled: <span id="position-enabled">0</span></p>
+      <p>Target Angle: <span id="position-target-deg">0</span> deg</p>
+      <p>Target Counts: <span id="position-target-counts">0</span></p>
+      <p>Position PWM: <span id="position-pwm">0</span></p>
+    </div>
+
+    <div class="card half">
+      <h2>Live Position Trend</h2>
+      <canvas id="position-trend-canvas" width="650" height="300"></canvas>
+      <p>
+        Target Angle: <span id="graph-target-angle">0</span> |
+        Actual Angle: <span id="graph-output-angle">0</span> |
+        PWM: <span id="graph-position-pwm">0</span>
+      </p>
+      <p class="small-text">
+        Blue = target angle, Green = actual angle, Red = position PWM / 5
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card half">
+      <h2>Trapezoid Profile + Speed PID</h2>
+
+      <input id="profile-angle-slider" type="range" min="-360" max="360" value="0">
+      <h3>Target: <span id="profile-angle-value">0</span> deg</h3>
+
+      <button id="profile-set-target-button">Set Profile Target</button>
+      <button id="profile-enable-button">Enable Profile Control</button>
+      <button id="profile-disable-button">Disable Profile Control</button>
+
+      <h3>Profile Parameters</h3>
+      <p>Max RPM: <input id="profile-max-rpm-input" type="number" step="1" value="20"></p>
+      <p>Accel RPM/s: <input id="profile-accel-input" type="number" step="1" value="30"></p>
+
+      <button id="profile-set-params-button">Set Profile Params</button>
+
+      <p>Profile Enabled: <span id="profile-enabled">0</span></p>
+      <p>Target Angle: <span id="profile-target-deg">0</span> deg</p>
+      <p>Target Counts: <span id="profile-target-counts">0</span></p>
+      <p>Error Counts: <span id="profile-error-counts">0</span></p>
+      <p>Profile Target RPM: <span id="profile-target-rpm">0</span></p>
+      <p>Profile Max RPM: <span id="profile-max-rpm">0</span></p>
+      <p>Profile Accel: <span id="profile-accel">0</span> RPM/s</p>
+    </div>
+
+    <div class="card half">
+      <h2>Live Profile Trend</h2>
+      <canvas id="profile-trend-canvas" width="650" height="300"></canvas>
+      <p>
+        Target Angle: <span id="graph-profile-target-angle">0</span> |
+        Actual Angle: <span id="graph-profile-actual-angle">0</span> |
+        Target RPM: <span id="graph-profile-rpm">0</span>
+      </p>
+      <p class="small-text">
+        Blue = target angle, Green = actual angle, Red = profile target RPM
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 id="status-text">Status: connecting...</h2>
+    <div id="error-container"></div>
+  </div>
+
+  <script src="libs/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
